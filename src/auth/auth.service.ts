@@ -49,8 +49,9 @@ export class AuthService {
       throw new HttpException('Password is incorrect', HttpStatus.BAD_REQUEST);
     }
 
+    const username = candidate.username;
     const token = await this.jwtService.signAsync({ credential: email });
 
-    return token;
+    return { username, email, token };
   }
 }
