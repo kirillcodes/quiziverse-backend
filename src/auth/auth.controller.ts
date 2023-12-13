@@ -15,8 +15,10 @@ export class AuthController {
 
   @Post('sign-in')
   async signIn(@Body() dto: CreateUserDto) {
-    const token = await this.authService.signIn(dto.email, dto.password);
+    const user = await this.authService.signIn(dto.email, dto.password);
 
-    return token;
+    console.log(user);
+
+    return user;
   }
 }
