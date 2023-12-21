@@ -4,9 +4,10 @@ import { AuthController } from './auth.controller';
 import { JwtModule } from '@nestjs/jwt';
 import { UsersModule } from 'src/users/users.module';
 import { ConfigModule } from '@nestjs/config';
+import { AuthMiddleware } from './auth.middleware';
 
 @Module({
-  providers: [AuthService],
+  providers: [AuthService, AuthMiddleware],
   controllers: [AuthController],
   imports: [
     ConfigModule.forRoot({

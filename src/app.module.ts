@@ -1,9 +1,10 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, RequestMethod } from '@nestjs/common';
 import { AuthModule } from './auth/auth.module';
 import { SequelizeModule } from '@nestjs/sequelize';
 import { ConfigModule } from '@nestjs/config';
 import { UsersModule } from './users/users.module';
 import { User } from './users/users.model';
+import { AuthMiddleware } from './auth/auth.middleware';
 
 @Module({
   imports: [
@@ -24,4 +25,15 @@ import { User } from './users/users.model';
     UsersModule,
   ],
 })
-export class AppModule {}
+export class AppModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer
+      .apply(AuthMiddleware)
+      .exclude(
+        { path: `/auth/sign-in`, method: RequestMethod.POST },
+        { path: `/auth/sign-up`, method: RequestMethod.POST },
+        { path: `/auth/logout`, method: RequestMethod.POST },
+      )
+      .forRoutes('*');
+  }
+}

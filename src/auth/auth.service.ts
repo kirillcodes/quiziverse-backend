@@ -20,10 +20,16 @@ export class AuthService {
       );
     }
 
-    const [firstName, lastName] = email.split('@')[0].split('.');
-    const capitalize = (str: string) =>
-      str.charAt(0).toUpperCase() + str.slice(1);
-    const username = `${capitalize(firstName)} ${capitalize(lastName)}`;
+    let username = '';
+
+    try {
+      const [firstName, lastName] = email.split('@')[0].split('.');
+      const capitalize = (str: string) =>
+        str.charAt(0).toUpperCase() + str.slice(1);
+      username = `${capitalize(firstName)} ${capitalize(lastName)}`;
+    } catch {
+      throw new HttpException('Email is incorrect', HttpStatus.BAD_REQUEST);
+    }
 
     const hashedPassword = hashSync(password);
 
@@ -49,9 +55,8 @@ export class AuthService {
       throw new HttpException('Password is incorrect', HttpStatus.BAD_REQUEST);
     }
 
-    const userId = candidate.id;
     const token = await this.jwtService.signAsync({ credential: email });
 
-    return { userId, token };
+    return { email, token };
   }
 }
