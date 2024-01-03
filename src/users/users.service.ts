@@ -6,11 +6,17 @@ import { User } from './users.model';
 export class UsersService {
   constructor(@InjectModel(User) private userRepository: typeof User) {}
 
-  async createUser(username: string, email: string, password: string) {
+  async createUser(
+    username: string,
+    email: string,
+    password: string,
+    role: string,
+  ) {
     const user = await this.userRepository.create({
       username,
       email,
       password,
+      role,
     });
     return user;
   }

@@ -1,9 +1,18 @@
-import { Column, DataType, Model, Table } from 'sequelize-typescript';
+import {
+  BelongsToMany,
+  Column,
+  DataType,
+  Model,
+  Table,
+} from 'sequelize-typescript';
+import { Course } from 'src/courses/courses.model';
+import { UserCourse } from './user-course.model';
 
 type UserCreationAttrs = {
   username: string;
   email: string;
   password: string;
+  role: string;
 };
 
 @Table({ tableName: 'users' })
@@ -35,9 +44,12 @@ export class User extends Model<User, UserCreationAttrs> {
   })
   password: string;
 
-  // @Column({
-  //   type: DataType.STRING,
-  //   allowNull: false,
-  // })
-  // role: string;
+  @Column({
+    type: DataType.STRING,
+    allowNull: false,
+  })
+  role: string;
+
+  @BelongsToMany(() => Course, () => UserCourse)
+  courses: Course[];
 }

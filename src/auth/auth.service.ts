@@ -1,6 +1,7 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { hashSync, compareSync } from 'bcryptjs';
+import { ROLES } from 'src/users/enums/roles.enum';
 import { UsersService } from 'src/users/users.service';
 
 @Injectable()
@@ -20,23 +21,30 @@ export class AuthService {
       );
     }
 
-    let username = '';
+    const hashedPassword = hashSync(password);
+
+    let username: string = '';
+    let role: string = '';
 
     try {
       const [firstName, lastName] = email.split('@')[0].split('.');
       const capitalize = (str: string) =>
         str.charAt(0).toUpperCase() + str.slice(1);
       username = `${capitalize(firstName)} ${capitalize(lastName)}`;
+
+      role =
+        email.split('@')[1] === process.env.TEACHER_EMAIL_DOMAIN
+          ? ROLES.TEACHER
+          : ROLES.STUDENT;
     } catch {
       throw new HttpException('Email is incorrect', HttpStatus.BAD_REQUEST);
     }
-
-    const hashedPassword = hashSync(password);
 
     const user = await this.userService.createUser(
       username,
       email,
       hashedPassword,
+      role,
     );
 
     return user;
@@ -55,7 +63,11 @@ export class AuthService {
       throw new HttpException('Password is incorrect', HttpStatus.BAD_REQUEST);
     }
 
-    const token = await this.jwtService.signAsync({ credential: email });
+    const token = await this.jwtService.signAsync({
+      id: candidate.id,
+      email: candidate.email,
+      role: candidate.role,
+    });
 
     return { email, token };
   }
