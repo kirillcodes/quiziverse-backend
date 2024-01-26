@@ -1,4 +1,4 @@
-import { Controller, Param, Delete, Post, Body, Req } from '@nestjs/common';
+import { Controller, Param, Delete, Post, Body, Req, Get } from '@nestjs/common';
 import { CoursesService } from './courses.service';
 import { CreateCourseDto } from './dto/create-course.dto';
 import { Request } from 'express';
@@ -7,8 +7,8 @@ import { Request } from 'express';
 export class CoursesController {
   constructor(private readonly coursesService: CoursesService) {}
 
-  @Post('create-course')
-  async createCourse(@Body() body: CreateCourseDto, @Req() req: Request): Promise<CreateCourseDto> {
+  @Post('create')
+  async createCourse(@Body() body: CreateCourseDto, @Req() req: Request) {
     const { title, description } = body;
 
     const userId = req.user.id;
@@ -17,8 +17,22 @@ export class CoursesController {
     return course;
   }
 
-  @Delete('delete-course/:id')
-  async deleteCourse(@Param('id') id: string): Promise<void> {
-    await this.coursesService.deleteCourse(+id);
+  @Delete('delete/:id')
+  async deleteCourse(@Param('id') id: string, @Req() req: Request) {
+    const userId = req.user.id;
+    
+    await this.coursesService.deleteCourse(+id, userId);
+  }
+
+  @Get('signed')
+  async getSignedCourses(@Req() req: Request) {
+    const userId = req.user.id;
+
+    return await this.coursesService.getCoursesByUserId(userId);
+  }
+
+  @Get('all')
+  async getAllCourses() {
+    return await this.coursesService.getAllCourses();
   }
 }

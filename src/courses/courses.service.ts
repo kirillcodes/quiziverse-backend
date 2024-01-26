@@ -17,44 +17,29 @@ export class CoursesService {
       const course = await this.courseRepository.create({
         title,
         description,
-        userId
+        username: user.username,
       });
+
+      await user.$add('courses', course);
+
       return course;
     } else {
-      throw Error('User not found');
+      throw new NotFoundException('User not found');
     }
   }
 
-  async deleteCourse(courseId: number) {
+  async deleteCourse(courseId: number, userId: number) {
     const course = await this.courseRepository.findByPk(courseId);
+    const user = await this.userRepository.findByPk(userId);
 
     if (!course) {
       throw new NotFoundException(`Course not found`);
+    } else if (!user) {
+      throw new NotFoundException('User not found');
     }
 
+    await user.$remove('courses', course);
     await course.destroy();
-  }
-
-  async addUserToCourse(userId: number, courseId: number): Promise<void> {
-    const user = await this.userRepository.findByPk(userId);
-    const course = await this.courseRepository.findByPk(courseId);
-
-    if (user && course) {
-      await user.$add('courses', course);
-    } else {
-      throw new Error('User or Course not found');
-    }
-  }
-
-  async removeUserFromCourse(userId: number, courseId: number): Promise<void> {
-    const user = await this.userRepository.findByPk(userId);
-    const course = await this.courseRepository.findByPk(courseId);
-
-    if (user && course) {
-      await user.$remove('courses', course);
-    } else {
-      throw new Error('User or Course not found');
-    }
   }
 
   async getCoursesByUserId(userId: number): Promise<Course[]> {
@@ -65,7 +50,12 @@ export class CoursesService {
     if (user) {
       return user.courses;
     } else {
-      throw new Error('User not found');
+      throw new NotFoundException('User not found');
     }
+  }
+
+  async getAllCourses(): Promise<Course[]> {
+    const courses = this.courseRepository.findAll();
+    return courses;
   }
 }

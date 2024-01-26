@@ -6,7 +6,7 @@ import {
   Table,
 } from 'sequelize-typescript';
 import { Course } from 'src/courses/courses.model';
-import { UserCourse } from './user-course.model';
+import { UsersCourses } from './users-courses.model';
 
 type UserCreationAttrs = {
   username: string;
@@ -50,6 +50,6 @@ export class User extends Model<User, UserCreationAttrs> {
   })
   role: string;
 
-  @BelongsToMany(() => Course, () => UserCourse)
+  @BelongsToMany(() => Course, () => UsersCourses)
   courses: Course[];
 }

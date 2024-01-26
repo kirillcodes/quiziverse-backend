@@ -1,4 +1,5 @@
 export class CreateCourseDto {
-  title: string;
-  description: string;
+  readonly title: string;
+  readonly description: string;
+  readonly userId: number;
 }

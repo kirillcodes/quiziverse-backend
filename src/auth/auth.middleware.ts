@@ -1,15 +1,15 @@
 import {
-  HttpException,
-  HttpStatus,
   Injectable,
+  InternalServerErrorException,
   NestMiddleware,
+  UnauthorizedException,
 } from '@nestjs/common';
 import * as jwt from 'jsonwebtoken';
 import { Request, Response, NextFunction } from 'express';
 
 declare module 'express' {
   interface Request {
-    user?: {
+    user: {
       id: number;
       email: string;
       role: string;
@@ -26,32 +26,28 @@ export class AuthMiddleware implements NestMiddleware {
       const token = req.headers.authorization?.split(' ')[1];
 
       if (!token) {
-        throw new HttpException('Forbidden', HttpStatus.UNAUTHORIZED);
+        throw new UnauthorizedException('Not authorized');
       }
 
-      try {
-        const decodedToken = jwt.verify(token, this.secretKey) as {
-          id: number;
-          email: string;
-          role: string;
-        };
+      const decodedToken = jwt.verify(token, this.secretKey) as {
+        id: number;
+        email: string;
+        role: string;
+      };
 
-        if (decodedToken) {
-          req.user = decodedToken;
-        } else {
-          throw new HttpException('Forbidden', HttpStatus.UNAUTHORIZED);
-        }
-      } catch (jwtError) {
-        throw new HttpException('Forbidden', HttpStatus.UNAUTHORIZED);
+      if (decodedToken) {
+        req.user = decodedToken;
+      } else {
+        throw new UnauthorizedException('Invalid token');
       }
 
       next();
     } catch (error) {
       if (error.name === 'TokenExpiredError') {
-        throw new HttpException('Token expired', HttpStatus.UNAUTHORIZED);
+        throw new UnauthorizedException('Token expired');
       }
 
-      throw new HttpException('Forbidden', HttpStatus.INTERNAL_SERVER_ERROR);
+      throw new InternalServerErrorException('Internal Server Error');
     }
   }
 }

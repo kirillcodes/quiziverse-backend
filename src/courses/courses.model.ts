@@ -5,13 +5,13 @@ import {
   Model,
   Table,
 } from 'sequelize-typescript';
-import { UserCourse } from 'src/users/user-course.model';
+import { UsersCourses } from 'src/users/users-courses.model';
 import { User } from 'src/users/users.model';
 
 type CourseCreationAttrs = {
   title: string;
   description: string;
-  userId: number;
+  username: string;
 };
 
 @Table({ tableName: 'courses' })
@@ -24,8 +24,8 @@ export class Course extends Model<Course, CourseCreationAttrs> {
   })
   id: number;
 
-  @Column({ type: DataType.INTEGER, unique: true, allowNull: false })
-  userId: number;
+  @Column({ type: DataType.STRING, allowNull: false })
+  username: string;
 
   @Column({
     type: DataType.STRING,
@@ -39,6 +39,6 @@ export class Course extends Model<Course, CourseCreationAttrs> {
   })
   description: string;
 
-  @BelongsToMany(() => User, () => UserCourse)
+  @BelongsToMany(() => User, () => UsersCourses)
   users: User[];
 }

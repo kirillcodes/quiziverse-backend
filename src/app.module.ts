@@ -1,13 +1,10 @@
-import { MiddlewareConsumer, Module, RequestMethod } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule, RequestMethod } from '@nestjs/common';
 import { AuthModule } from './auth/auth.module';
 import { SequelizeModule } from '@nestjs/sequelize';
 import { ConfigModule } from '@nestjs/config';
 import { UsersModule } from './users/users.module';
-import { User } from './users/users.model';
 import { AuthMiddleware } from './auth/auth.middleware';
 import { CoursesModule } from './courses/courses.module';
-import { Course } from './courses/courses.model';
-import { UserCourse } from './users/user-course.model';
 
 @Module({
   imports: [
@@ -21,7 +18,8 @@ import { UserCourse } from './users/user-course.model';
       username: process.env.POSTGRES_USER,
       password: process.env.POSTGRES_PASSWORD,
       database: process.env.POSTGRES_DB,
-      models: [User, Course, UserCourse],
+      // models: [User, Course, UsersCourses],
+      models: [__dirname + '/**/*.model{.ts}'],
       autoLoadModels: true,
     }),
     AuthModule,
@@ -29,7 +27,7 @@ import { UserCourse } from './users/user-course.model';
     CoursesModule,
   ],
 })
-export class AppModule {
+export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer
       .apply(AuthMiddleware)
