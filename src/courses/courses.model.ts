@@ -11,7 +11,8 @@ import { User } from 'src/users/users.model';
 type CourseCreationAttrs = {
   title: string;
   description: string;
-  username: string;
+  author: string;
+  authorId: number;
 };
 
 @Table({ tableName: 'courses' })
@@ -25,7 +26,10 @@ export class Course extends Model<Course, CourseCreationAttrs> {
   id: number;
 
   @Column({ type: DataType.STRING, allowNull: false })
-  username: string;
+  author: string;
+
+  @Column({type: DataType.INTEGER, allowNull: false})
+  authorId: number;
 
   @Column({
     type: DataType.STRING,
@@ -34,7 +38,7 @@ export class Course extends Model<Course, CourseCreationAttrs> {
   title: string;
 
   @Column({
-    type: DataType.STRING,
+    type: DataType.TEXT,
     allowNull: false,
   })
   description: string;

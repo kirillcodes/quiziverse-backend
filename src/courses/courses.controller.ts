@@ -1,4 +1,4 @@
-import { Controller, Param, Delete, Post, Body, Req, Get } from '@nestjs/common';
+import { Controller, Param, Delete, Post, Body, Req, Get, ParseIntPipe } from '@nestjs/common';
 import { CoursesService } from './courses.service';
 import { CreateCourseDto } from './dto/create-course.dto';
 import { Request } from 'express';
@@ -34,5 +34,10 @@ export class CoursesController {
   @Get('all')
   async getAllCourses() {
     return await this.coursesService.getAllCourses();
+  }
+
+  @Get(':id')
+  async getCourseById(@Param('id', ParseIntPipe) id: number, ) {
+    return await this.coursesService.getCourseById(id);
   }
 }

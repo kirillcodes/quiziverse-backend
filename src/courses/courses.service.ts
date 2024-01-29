@@ -13,19 +13,20 @@ export class CoursesService {
   async createCourse(title: string, description: string, userId: number) {
     const user = await this.userRepository.findByPk(userId);
 
-    if (user) {
-      const course = await this.courseRepository.create({
-        title,
-        description,
-        username: user.username,
-      });
-
-      await user.$add('courses', course);
-
-      return course;
-    } else {
+    if (!user) {
       throw new NotFoundException('User not found');
     }
+
+    const course = await this.courseRepository.create({
+      title,
+      description,
+      author: user.username,
+      authorId: userId,
+    });
+
+    await user.$add('courses', course);
+
+    return course;
   }
 
   async deleteCourse(courseId: number, userId: number) {
@@ -47,15 +48,25 @@ export class CoursesService {
       include: [{ model: Course, as: 'courses' }],
     });
 
-    if (user) {
-      return user.courses;
-    } else {
+    if (!user) {
       throw new NotFoundException('User not found');
     }
+
+    return user.courses;
   }
 
   async getAllCourses(): Promise<Course[]> {
-    const courses = this.courseRepository.findAll();
+    const courses = await this.courseRepository.findAll();
     return courses;
+  }
+
+  async getCourseById(courseId: number): Promise<Course> {
+    const course = await this.courseRepository.findByPk(courseId);
+
+    if (!course) {
+      throw new NotFoundException('Course not found');
+    }
+
+    return course;
   }
 }
