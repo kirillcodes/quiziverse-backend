@@ -9,6 +9,7 @@ import {
 import { Test } from './tests.model';
 
 type QuestionCreationAttrs = {
+  text: string;
   rightAnswer: number;
   points: number;
   testId: number;
@@ -23,6 +24,9 @@ export class Question extends Model<Question, QuestionCreationAttrs> {
     primaryKey: true,
   })
   id: number;
+
+  @Column({ type: DataType.STRING, allowNull: false })
+  text: string;
 
   @Column({ type: DataType.INTEGER, allowNull: false })
   rightAnswer: number;
