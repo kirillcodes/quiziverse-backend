@@ -6,6 +6,7 @@ export class CreateTestDto {
 }
 
 class QuestionDto {
+  readonly text: string;
   readonly answers: AnswerDto[];
   readonly rightAnswer: number;
   readonly points: number;

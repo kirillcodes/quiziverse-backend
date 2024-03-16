@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Param } from '@nestjs/common';
+import { Controller, Post, Body, Param, Get } from '@nestjs/common';
 import { TestService } from './tests.service';
 import { CreateTestDto } from './dto/create-test.dto';
 
@@ -12,5 +12,10 @@ export class TestController {
     @Body() createTestDto: CreateTestDto,
   ) {
     return await this.testService.createTest(createTestDto, courseId);
+  }
+
+  @Get()
+  async get(@Param('courseId') courseId: number) {
+    return await this.testService.getTestsList(courseId);
   }
 }
