@@ -29,9 +29,10 @@ export class TestService {
       courseId,
     });
 
-    const questionsData = questions.map(questionDto => ({
-      rightAnswer: questionDto.rightAnswer,
-      points: questionDto.points,
+    const questionsData = questions.map((QuestionDto) => ({
+      text: QuestionDto.text,
+      rightAnswer: QuestionDto.rightAnswer,
+      points: QuestionDto.points,
       testId: test.id,
     }));
 
@@ -39,8 +40,8 @@ export class TestService {
 
     const answersData = [];
     for (let i = 0; i < questions.length; i++) {
-      const answers = questions[i].answers.map(answerDto => ({
-        text: answerDto.text,
+      const answers = questions[i].answers.map((AnswerDto) => ({
+        text: AnswerDto.text,
         questionId: createdQuestions[i].id,
       }));
       answersData.push(...answers);
@@ -49,5 +50,12 @@ export class TestService {
     await this.answerModel.bulkCreate(answersData);
 
     return test;
+  }
+
+  async getTestsList(courseId: number) {
+    const tests = await this.testModel.findAll({
+      where: { courseId: courseId },
+    });
+    return tests;
   }
 }
