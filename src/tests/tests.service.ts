@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { Test } from './tests.model';
 import { Question } from './questions.model';
@@ -57,5 +57,37 @@ export class TestService {
       where: { courseId: courseId },
     });
     return tests;
+  }
+
+  async getTest(courseId: number, testId: number) {
+    const test = await this.testModel.findOne({
+      where: { id: testId, courseId: courseId },
+      include: [
+        {
+          model: this.questionModel,
+          include: [{ model: this.answerModel }],
+        },
+      ],
+    });
+
+    if (!test) {
+      return new NotFoundException('Test not found');
+    }
+
+    const formattedTest = {
+      id: test.id,
+      title: test.title,
+      timeLimit: test.timeLimit,
+      questions: test.questions.map((question) => ({
+        id: question.id,
+        text: question.text,
+        answers: question.answers.map((answer) => ({
+          id: answer.id,
+          text: answer.text,
+        })),
+      })),
+    };
+
+    return formattedTest;
   }
 }
