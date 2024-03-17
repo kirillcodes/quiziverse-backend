@@ -3,10 +3,12 @@ import {
   Column,
   DataType,
   ForeignKey,
+  HasMany,
   Model,
   Table,
 } from 'sequelize-typescript';
 import { Test } from './tests.model';
+import { Answer } from './answers.model';
 
 type QuestionCreationAttrs = {
   text: string;
@@ -40,4 +42,7 @@ export class Question extends Model<Question, QuestionCreationAttrs> {
 
   @BelongsTo(() => Test)
   test: Test;
+
+  @HasMany(() => Answer, { foreignKey: 'questionId' })
+  answers: Answer[];
 }
