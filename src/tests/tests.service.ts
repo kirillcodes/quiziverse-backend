@@ -128,7 +128,7 @@ export class TestService {
       where: { testId, userId },
     });
 
-    if (testResult) {
+    if (testResult[0]) {
       return new ForbiddenException('The test has already been passed');
     }
 
