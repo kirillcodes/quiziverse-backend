@@ -67,14 +67,37 @@ export class TestService {
     return test;
   }
 
-  async getTestsList(courseId: number) {
+  async getTestsList(courseId: number, userId: number) {
+    const user = await this.userModel.findByPk(userId);
+
+    if (!user) {
+      return new UnauthorizedException('You are not authorized');
+    }
+
     const tests = await this.testModel.findAll({
       where: { courseId: courseId },
     });
-    return tests;
+
+    const testsResults = await this.testResultModel.findAll({
+      where: { userId },
+    });
+
+    const passedTestsIds = testsResults.map((result) => result.testId);
+
+    const filteredTests = tests.filter(
+      (test) => !passedTestsIds.includes(test.id),
+    );
+
+    return filteredTests;
   }
 
-  async getTest(courseId: number, testId: number) {
+  async getTest(courseId: number, testId: number, userId: number) {
+    const user = await this.userModel.findByPk(userId);
+
+    if (!user) {
+      return new UnauthorizedException('You are not authorized');
+    }
+
     const test = await this.testModel.findOne({
       where: { id: testId, courseId: courseId },
       include: [
@@ -86,7 +109,15 @@ export class TestService {
     });
 
     if (!test) {
-      return new NotFoundException('Test not found');
+      return new NotFoundException('Test was not found');
+    }
+
+    const testResult = this.testResultModel.findOne({
+      where: { testId, userId },
+    });
+
+    if (testResult) {
+      return new ForbiddenException('The test has already been passed');
     }
 
     const formattedTest = {
@@ -116,7 +147,7 @@ export class TestService {
     const user = await this.userModel.findByPk(userId);
 
     if (!user) {
-      return new UnauthorizedException('User was not found');
+      return new UnauthorizedException('You are not authorized');
     }
 
     const test = await this.testModel.findOne({
