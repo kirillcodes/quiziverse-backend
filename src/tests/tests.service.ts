@@ -1,4 +1,5 @@
 import {
+  ForbiddenException,
   Injectable,
   NotFoundException,
   UnauthorizedException,
@@ -136,7 +137,15 @@ export class TestService {
       }
     });
 
-    const testResult = await this.testResultModel.create({
+    let testResult = await this.testResultModel.findOne({
+      where: { testId, userId },
+    });
+
+    if (testResult) {
+      return new ForbiddenException('The test has already been passed');
+    }
+
+    testResult = await this.testResultModel.create({
       testId,
       userId,
       score,
