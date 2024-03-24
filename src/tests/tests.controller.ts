@@ -5,9 +5,12 @@ import {
   Param,
   Get,
   ParseIntPipe,
+  Req,
 } from '@nestjs/common';
 import { TestService } from './tests.service';
 import { CreateTestDto } from './dto/create-test.dto';
+import { Request } from 'express';
+import { ResultsDto } from './dto/results.dto';
 
 @Controller('courses/:courseId/tests')
 export class TestController {
@@ -32,5 +35,21 @@ export class TestController {
     @Param('id', ParseIntPipe) id: number,
   ) {
     return await this.testService.getTest(courseId, id);
+  }
+
+  @Post(':id')
+  async submitResult(
+    @Param('courseId', ParseIntPipe) courseId: number,
+    @Param('id', ParseIntPipe) id: number,
+    @Req() req: Request,
+    @Body() resultsDto: ResultsDto,
+  ) {
+    const userId = req.user.id;
+    return await this.testService.submitResults(
+      courseId,
+      id,
+      userId,
+      resultsDto,
+    );
   }
 }
