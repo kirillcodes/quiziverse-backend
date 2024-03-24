@@ -13,6 +13,7 @@ import { User } from 'src/users/users.model';
 import { TestResult } from 'src/tests/tests-results.model';
 import { UserAnswer } from './users-answers.model';
 import { ResultsDto } from './dto/results.dto';
+import { ROLES } from 'src/users/enums/roles.enum';
 
 @Injectable()
 export class TestService {
@@ -34,7 +35,18 @@ export class TestService {
   async createTest(
     createTestDto: CreateTestDto,
     courseId: number,
-  ): Promise<Test> {
+    userId: number,
+  ): Promise<Test | Error> {
+    const user = await this.userModel.findByPk(userId);
+
+    if (!user) {
+      return new UnauthorizedException('User was not found');
+    }
+
+    if (user.role !== ROLES.TEACHER) {
+      return new ForbiddenException('No permissions');
+    }
+
     const { title, timeLimit, startDate, questions } = createTestDto;
 
     const test = await this.testModel.create({
@@ -71,7 +83,7 @@ export class TestService {
     const user = await this.userModel.findByPk(userId);
 
     if (!user) {
-      return new UnauthorizedException('You are not authorized');
+      return new UnauthorizedException('User was not found');
     }
 
     const tests = await this.testModel.findAll({
@@ -95,7 +107,7 @@ export class TestService {
     const user = await this.userModel.findByPk(userId);
 
     if (!user) {
-      return new UnauthorizedException('You are not authorized');
+      return new UnauthorizedException('User was not found');
     }
 
     const test = await this.testModel.findOne({
@@ -147,7 +159,7 @@ export class TestService {
     const user = await this.userModel.findByPk(userId);
 
     if (!user) {
-      return new UnauthorizedException('You are not authorized');
+      return new UnauthorizedException('User was not found');
     }
 
     const test = await this.testModel.findOne({

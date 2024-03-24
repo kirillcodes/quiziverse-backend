@@ -19,9 +19,11 @@ export class TestController {
   @Post()
   async create(
     @Param('courseId', ParseIntPipe) courseId: number,
+    @Req() req: Request,
     @Body() createTestDto: CreateTestDto,
   ) {
-    return await this.testService.createTest(createTestDto, courseId);
+    const userId = req.user.id;
+    return await this.testService.createTest(createTestDto, courseId, userId);
   }
 
   @Get()
