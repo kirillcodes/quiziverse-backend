@@ -40,11 +40,11 @@ export class TestService {
     const user = await this.userModel.findByPk(userId);
 
     if (!user) {
-      return new UnauthorizedException('User was not found');
+      throw new UnauthorizedException('User was not found');
     }
 
     if (user.role !== ROLES.TEACHER) {
-      return new ForbiddenException('No permissions');
+      throw new ForbiddenException('No permissions');
     }
 
     const { title, timeLimit, startDate, questions } = createTestDto;
@@ -83,7 +83,7 @@ export class TestService {
     const user = await this.userModel.findByPk(userId);
 
     if (!user) {
-      return new UnauthorizedException('User was not found');
+      throw new UnauthorizedException('User was not found');
     }
 
     const tests = await this.testModel.findAll({
@@ -107,7 +107,7 @@ export class TestService {
     const user = await this.userModel.findByPk(userId);
 
     if (!user) {
-      return new UnauthorizedException('User was not found');
+      throw new UnauthorizedException('User was not found');
     }
 
     const test = await this.testModel.findOne({
@@ -121,7 +121,7 @@ export class TestService {
     });
 
     if (!test) {
-      return new NotFoundException('Test was not found');
+      throw new NotFoundException('Test was not found');
     }
 
     const testResult = this.testResultModel.findOne({
@@ -129,7 +129,7 @@ export class TestService {
     });
 
     if (testResult[0]) {
-      return new ForbiddenException('The test has already been passed');
+      throw new ForbiddenException('The test has already been passed');
     }
 
     const formattedTest = {
@@ -159,7 +159,7 @@ export class TestService {
     const user = await this.userModel.findByPk(userId);
 
     if (!user) {
-      return new UnauthorizedException('User was not found');
+      throw new UnauthorizedException('User was not found');
     }
 
     const test = await this.testModel.findOne({
@@ -170,7 +170,7 @@ export class TestService {
     });
 
     if (!test) {
-      return new NotFoundException('Test was not found');
+      throw new NotFoundException('Test was not found');
     }
 
     let score = 0;
@@ -185,7 +185,7 @@ export class TestService {
     });
 
     if (testResult) {
-      return new ForbiddenException('The test has already been passed');
+      throw new ForbiddenException('The test has already been passed');
     }
 
     testResult = await this.testResultModel.create({

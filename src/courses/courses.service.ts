@@ -1,7 +1,12 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { Course } from './courses.model';
 import { InjectModel } from '@nestjs/sequelize';
 import { User } from 'src/users/users.model';
+import { ROLES } from 'src/users/enums/roles.enum';
 
 @Injectable()
 export class CoursesService {
@@ -15,6 +20,10 @@ export class CoursesService {
 
     if (!user) {
       throw new NotFoundException('User not found');
+    }
+
+    if (user.role !== ROLES.TEACHER) {
+      throw new ForbiddenException('No permissions');
     }
 
     const course = await this.courseRepository.create({
@@ -35,7 +44,9 @@ export class CoursesService {
 
     if (!course) {
       throw new NotFoundException(`Course not found`);
-    } else if (!user) {
+    }
+
+    if (!user) {
       throw new NotFoundException('User not found');
     }
 
