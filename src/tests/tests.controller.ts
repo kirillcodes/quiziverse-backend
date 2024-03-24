@@ -25,16 +25,22 @@ export class TestController {
   }
 
   @Get()
-  async getTestsList(@Param('courseId', ParseIntPipe) courseId: number) {
-    return await this.testService.getTestsList(courseId);
+  async getTestsList(
+    @Param('courseId', ParseIntPipe) courseId: number,
+    @Req() req: Request,
+  ) {
+    const userId = req.user.id;
+    return await this.testService.getTestsList(courseId, userId);
   }
 
   @Get(':id')
   async getTest(
     @Param('courseId', ParseIntPipe) courseId: number,
     @Param('id', ParseIntPipe) id: number,
+    @Req() req: Request,
   ) {
-    return await this.testService.getTest(courseId, id);
+    const userId = req.user.id;
+    return await this.testService.getTest(courseId, id, userId);
   }
 
   @Post(':id')
