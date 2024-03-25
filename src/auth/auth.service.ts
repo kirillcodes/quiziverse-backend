@@ -1,4 +1,9 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import {
+  HttpException,
+  HttpStatus,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { hashSync, compareSync } from 'bcryptjs';
 import { ROLES } from 'src/users/enums/roles.enum';
@@ -69,5 +74,17 @@ export class AuthService {
     });
 
     return { token };
+  }
+
+  async getRole(userId: number) {
+    const user = await this.userService.getUserById(userId);
+
+    if (!user) {
+      throw new UnauthorizedException('Not authorized');
+    }
+
+    const role = { role: user.role };
+
+    return role;
   }
 }

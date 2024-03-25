@@ -32,4 +32,9 @@ export class UsersService {
     });
     return user;
   }
+
+  async getUserById(id: number) {
+    const user = await this.userRepository.findByPk(id);
+    return user;
+  }
 }
