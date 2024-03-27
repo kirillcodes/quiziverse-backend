@@ -8,6 +8,8 @@ import { Answer } from './answers.model';
 import { User } from 'src/users/users.model';
 import { TestResult } from 'src/tests/tests-results.model';
 import { UserAnswer } from './users-answers.model';
+import { UsersCourses } from 'src/users/users-courses.model';
+import { Course } from 'src/courses/courses.model';
 
 @Module({
   imports: [
@@ -18,6 +20,8 @@ import { UserAnswer } from './users-answers.model';
       TestResult,
       UserAnswer,
       User,
+      UsersCourses,
+      Course,
     ]),
   ],
   controllers: [TestController],

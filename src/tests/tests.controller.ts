@@ -60,4 +60,19 @@ export class TestController {
       resultsDto,
     );
   }
+
+  @Get(':id/results')
+  async getResultsList(
+    @Param('courseId', ParseIntPipe) courseId: number,
+    @Param('id', ParseIntPipe) testId: number,
+    @Req() req: Request,
+  ) {
+    const userId = req.user.id;
+    const resultsList = await this.testService.getResultsList(
+      courseId,
+      testId,
+      userId,
+    );
+    return resultsList;
+  }
 }
