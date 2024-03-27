@@ -14,6 +14,8 @@ import { TestResult } from 'src/tests/tests-results.model';
 import { UserAnswer } from './users-answers.model';
 import { ResultsDto } from './dto/results.dto';
 import { ROLES } from 'src/users/enums/roles.enum';
+import { UsersCourses } from 'src/users/users-courses.model';
+import { Course } from 'src/courses/courses.model';
 
 @Injectable()
 export class TestService {
@@ -30,6 +32,10 @@ export class TestService {
     private readonly answerModel: typeof Answer,
     @InjectModel(TestResult)
     private readonly testResultModel: typeof TestResult,
+    @InjectModel(UsersCourses)
+    private readonly userCourseModel: typeof UsersCourses,
+    @InjectModel(Course)
+    private readonly courseModel: typeof Course,
   ) {}
 
   async createTest(
@@ -89,6 +95,15 @@ export class TestService {
     const tests = await this.testModel.findAll({
       where: { courseId: courseId },
     });
+
+    if (user.role === ROLES.TEACHER) {
+      const course = await this.userCourseModel.findOne({
+        where: { userId, courseId },
+      });
+      if (course) {
+        return tests;
+      }
+    }
 
     const testsResults = await this.testResultModel.findAll({
       where: { userId },
@@ -201,5 +216,47 @@ export class TestService {
         testResultId: testResult.id,
       });
     }
+  }
+
+  async getResultsList(courseId: number, testId: number, userId: number) {
+    const test = await this.testModel.findOne({
+      where: { id: testId },
+      include: [{ model: this.courseModel }],
+    });
+
+    if (!test) {
+      throw new NotFoundException('Test was not found');
+    }
+
+    const course = test.course;
+    if (course.authorId !== userId || course.id !== courseId) {
+      throw new ForbiddenException('No permissions');
+    }
+
+    const testResults = await this.testResultModel.findAll({
+      where: { testId },
+      include: [
+        {
+          model: this.userModel,
+        },
+      ],
+    });
+
+    const questions = await this.questionModel.findAll({ where: { testId } });
+
+    const globalScore = questions.reduce(
+      (accumulator, currentQuesiton) => accumulator + currentQuesiton.points,
+      0,
+    );
+
+    const formattedResults = testResults.map((result) => ({
+      username: result.user.username,
+      userId: result.user.id,
+      globalScore,
+      score: result.score,
+      testResultId: result.id,
+    }));
+
+    return formattedResults;
   }
 }
