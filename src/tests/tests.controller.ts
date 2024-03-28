@@ -75,4 +75,21 @@ export class TestController {
     );
     return resultsList;
   }
+
+  @Get(':id/results/:studentId')
+  async getUserResults(
+    @Param('courseId', ParseIntPipe) courseId: number,
+    @Param('id', ParseIntPipe) testId: number,
+    @Param('studentId', ParseIntPipe) studentId: number,
+    @Req() req: Request,
+  ) {
+    const userId = req.user.id;
+    const userResults = await this.testService.getUserResults(
+      courseId,
+      testId,
+      studentId,
+      userId,
+    );
+    return userResults;
+  }
 }
