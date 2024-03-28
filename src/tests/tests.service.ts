@@ -259,4 +259,73 @@ export class TestService {
 
     return formattedResults;
   }
+
+  async getUserResults(
+    courseId: number,
+    testId: number,
+    studentId: number,
+    userId: number,
+  ) {
+    const test = await this.testModel.findOne({
+      where: { id: testId },
+      include: [{ model: this.courseModel }],
+    });
+
+    if (!test) {
+      throw new NotFoundException('Test was not found');
+    }
+
+    const course = test.course;
+    if (course.authorId !== userId || course.id !== courseId) {
+      throw new ForbiddenException('No permissions');
+    }
+
+    const testResults = await this.testResultModel.findOne({
+      where: { testId, userId: studentId },
+      include: [
+        {
+          model: this.testModel,
+          include: [
+            {
+              model: this.questionModel,
+              include: [{ model: this.answerModel }],
+            },
+          ],
+        },
+        { model: this.userAnswerModel },
+      ],
+    });
+
+    if (!testResults) {
+      return new NotFoundException('Test results was not found');
+    }
+
+    testResults.test.questions.reverse().forEach((question) => {
+      question.answers.reverse();
+    });
+
+    const questions = await this.questionModel.findAll({ where: { testId } });
+    const globalScore = questions.reduce(
+      (accumulator, currentQuesiton) => accumulator + currentQuesiton.points,
+      0,
+    );
+
+    const student = await this.userModel.findByPk(studentId);
+    const studentData = {
+      id: student.id,
+      username: student.username,
+      email: student.email,
+    };
+
+    const formattedResults = {
+      id: testResults.id,
+      score: testResults.score,
+      globalScore,
+      test: testResults.test,
+      user: studentData,
+      userAnswers: testResults.userAnswers,
+    };
+
+    return formattedResults;
+  }
 }
