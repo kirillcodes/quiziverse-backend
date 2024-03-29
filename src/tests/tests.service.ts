@@ -1,6 +1,7 @@
 import {
   ForbiddenException,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -216,6 +217,8 @@ export class TestService {
         testResultId: testResult.id,
       });
     }
+
+    return true;
   }
 
   async getResultsList(courseId: number, testId: number, userId: number) {
@@ -327,5 +330,48 @@ export class TestService {
     };
 
     return formattedResults;
+  }
+
+  async deleteTest(courseId: number, testId: number, userId: number) {
+    const test = await this.testModel.findOne({
+      where: { id: testId },
+      include: [{ model: this.courseModel }],
+    });
+
+    if (!test) {
+      throw new NotFoundException('Test was not found');
+    }
+
+    const course = test.course;
+    if (course.authorId !== userId || course.id !== courseId) {
+      throw new ForbiddenException('No permissions');
+    }
+
+    try {
+      const testResults = await this.testResultModel.findAll({
+        where: { testId },
+      });
+      const questions = await this.questionModel.findAll({ where: { testId } });
+
+      await this.testResultModel.destroy({ where: { testId } });
+      await this.testModel.destroy({ where: { id: testId } });
+      await this.questionModel.destroy({ where: { testId } });
+
+      for (const result of testResults) {
+        await this.userAnswerModel.destroy({
+          where: { testResultId: result.id },
+        });
+      }
+
+      for (const question of questions) {
+        await this.answerModel.destroy({
+          where: { questionId: question.id },
+        });
+      }
+
+      return true;
+    } catch {
+      throw new InternalServerErrorException('Internal server error');
+    }
   }
 }
