@@ -6,6 +6,7 @@ import {
   Get,
   ParseIntPipe,
   Req,
+  Delete,
 } from '@nestjs/common';
 import { TestService } from './tests.service';
 import { CreateTestDto } from './dto/create-test.dto';
@@ -91,5 +92,15 @@ export class TestController {
       userId,
     );
     return userResults;
+  }
+
+  @Delete(':id/delete')
+  async deleteTest(
+    @Param('courseId', ParseIntPipe) courseId: number,
+    @Param('id', ParseIntPipe) testId: number,
+    @Req() req: Request,
+  ) {
+    const userId = req.user.id;
+    return await this.testService.deleteTest(courseId, testId, userId);
   }
 }
