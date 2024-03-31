@@ -140,11 +140,11 @@ export class TestService {
       throw new NotFoundException('Test was not found');
     }
 
-    const testResult = this.testResultModel.findOne({
+    const testResult = await this.testResultModel.findOne({
       where: { testId, userId },
     });
 
-    if (testResult[0]) {
+    if (testResult) {
       throw new ForbiddenException('The test has already been passed');
     }
 
