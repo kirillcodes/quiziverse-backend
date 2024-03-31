@@ -112,8 +112,21 @@ export class TestService {
 
     const passedTestsIds = testsResults.map((result) => result.testId);
 
+    const isOverTestTime = (startDate: Date | string, timeLimit: number) => {
+      const endTime = new Date(startDate).getTime() + timeLimit * 60 * 1000;
+      const currentTime = new Date().getTime();
+
+      if (endTime < currentTime) {
+        return false;
+      }
+
+      return true;
+    };
+
     const filteredTests = tests.filter(
-      (test) => !passedTestsIds.includes(test.id),
+      (test) =>
+        !passedTestsIds.includes(test.id) &&
+        isOverTestTime(test.startDate, test.timeLimit),
     );
 
     return filteredTests;
@@ -138,6 +151,21 @@ export class TestService {
 
     if (!test) {
       throw new NotFoundException('Test was not found');
+    }
+
+    const isOverTestTime = (startDate: Date | string, timeLimit: number) => {
+      const endTime = new Date(startDate).getTime() + timeLimit * 60 * 1000;
+      const currentTime = new Date().getTime();
+
+      if (endTime < currentTime) {
+        return false;
+      }
+
+      return true;
+    };
+
+    if (!isOverTestTime(test.startDate, test.timeLimit)) {
+      throw new ForbiddenException('Test time is over');
     }
 
     const testResult = await this.testResultModel.findOne({
