@@ -9,6 +9,11 @@ import { InjectModel } from '@nestjs/sequelize';
 import { User } from 'src/users/users.model';
 import { ROLES } from 'src/users/enums/roles.enum';
 import { UsersCourses } from 'src/users/users-courses.model';
+import { Test } from 'src/tests/tests.model';
+import { TestResult } from 'src/tests/tests-results.model';
+import { Question } from 'src/tests/questions.model';
+import { Answer } from 'src/tests/answers.model';
+import { UserAnswer } from 'src/tests/users-answers.model';
 
 @Injectable()
 export class CoursesService {
@@ -17,6 +22,11 @@ export class CoursesService {
     @InjectModel(User) private userRepository: typeof User,
     @InjectModel(UsersCourses)
     private userCourseRepository: typeof UsersCourses,
+    @InjectModel(Test) private testRepository: typeof Test,
+    @InjectModel(TestResult) private testResultRepository: typeof TestResult,
+    @InjectModel(Question) private quesitonRepository: typeof Question,
+    @InjectModel(Answer) private answerRepository: typeof Answer,
+    @InjectModel(UserAnswer) private userAnswerRepository: typeof UserAnswer,
   ) {}
 
   async createCourse(title: string, description: string, userId: number) {
@@ -43,19 +53,54 @@ export class CoursesService {
   }
 
   async deleteCourse(courseId: number, userId: number) {
-    const course = await this.courseRepository.findByPk(courseId);
     const user = await this.userRepository.findByPk(userId);
+    const course = await this.courseRepository.findByPk(courseId);
 
     if (!course) {
       throw new NotFoundException(`Course not found`);
     }
 
-    if (!user) {
-      throw new NotFoundException('User not found');
+    if (course.authorId !== userId) {
+      throw new ForbiddenException('No permissions');
     }
 
-    await user.$remove('courses', course);
-    await course.destroy();
+    try {
+      const tests = await this.testRepository.findAll({ where: { courseId } });
+
+      await Promise.all(
+        tests.map(async (test) => {
+          const testId = test.id;
+          const testResults = await this.testResultRepository.findAll({
+            where: { testId },
+          });
+          const questions = await this.quesitonRepository.findAll({
+            where: { testId },
+          });
+
+          await Promise.all([
+            this.testResultRepository.destroy({ where: { testId } }),
+            this.testRepository.destroy({ where: { id: testId } }),
+            this.quesitonRepository.destroy({ where: { testId } }),
+            ...testResults.map((result) =>
+              this.userAnswerRepository.destroy({
+                where: { testResultId: result.id },
+              }),
+            ),
+            ...questions.map((question) =>
+              this.answerRepository.destroy({
+                where: { questionId: question.id },
+              }),
+            ),
+          ]);
+        }),
+      );
+
+      await Promise.all([course.destroy(), user.$remove('courses', course)]);
+
+      return true;
+    } catch {
+      throw new InternalServerErrorException('Course was not deleted');
+    }
   }
 
   async getCoursesByUserId(userId: number): Promise<Course[]> {
@@ -126,11 +171,10 @@ export class CoursesService {
 
     try {
       await this.userCourseRepository.create({ userId, courseId });
+      return true;
     } catch {
       throw new InternalServerErrorException('Not subscribed to the course');
     }
-
-    return true;
   }
 
   async unsubscribe(courseId: number, userId: number) {
@@ -160,12 +204,11 @@ export class CoursesService {
 
     try {
       await this.userCourseRepository.destroy({ where: { userId, courseId } });
+      return true;
     } catch {
       throw new InternalServerErrorException(
         'Not unsubscribed from the course',
       );
     }
-
-    return true;
   }
 }

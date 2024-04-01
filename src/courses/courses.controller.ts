@@ -19,9 +19,7 @@ export class CoursesController {
   @Post('create')
   async createCourse(@Body() body: CreateCourseDto, @Req() req: Request) {
     const { title, description } = body;
-
     const userId = req.user.id;
-
     const course = await this.coursesService.createCourse(
       title,
       description,
@@ -30,17 +28,18 @@ export class CoursesController {
     return course;
   }
 
-  @Delete('delete/:id')
-  async deleteCourse(@Param('id') id: string, @Req() req: Request) {
+  @Delete(':id/delete')
+  async deleteCourse(
+    @Param('id', ParseIntPipe) id: number,
+    @Req() req: Request,
+  ) {
     const userId = req.user.id;
-
-    await this.coursesService.deleteCourse(+id, userId);
+    return await this.coursesService.deleteCourse(id, userId);
   }
 
   @Get('signed')
   async getSignedCourses(@Req() req: Request) {
     const userId = req.user.id;
-
     return await this.coursesService.getCoursesByUserId(userId);
   }
 
