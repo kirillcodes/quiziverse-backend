@@ -8,8 +8,13 @@ import {
 import { User } from './users.model';
 import { Course } from 'src/courses/courses.model';
 
+type CreationAttrs = {
+  userId: number;
+  courseId: number;
+};
+
 @Table({ tableName: 'users_courses', createdAt: false, updatedAt: false })
-export class UsersCourses extends Model<UsersCourses> {
+export class UsersCourses extends Model<UsersCourses, CreationAttrs> {
   @Column({
     type: DataType.INTEGER,
     unique: true,

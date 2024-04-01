@@ -1,18 +1,22 @@
 import {
   ForbiddenException,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
 import { Course } from './courses.model';
 import { InjectModel } from '@nestjs/sequelize';
 import { User } from 'src/users/users.model';
 import { ROLES } from 'src/users/enums/roles.enum';
+import { UsersCourses } from 'src/users/users-courses.model';
 
 @Injectable()
 export class CoursesService {
   constructor(
     @InjectModel(Course) private courseRepository: typeof Course,
     @InjectModel(User) private userRepository: typeof User,
+    @InjectModel(UsersCourses)
+    private userCourseRepository: typeof UsersCourses,
   ) {}
 
   async createCourse(title: string, description: string, userId: number) {
@@ -71,13 +75,97 @@ export class CoursesService {
     return courses;
   }
 
-  async getCourseById(courseId: number): Promise<Course> {
+  async getCourseById(courseId: number, userId: number) {
+    const user = await this.userRepository.findByPk(userId);
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
     const course = await this.courseRepository.findByPk(courseId);
 
     if (!course) {
       throw new NotFoundException('Course not found');
     }
 
-    return course;
+    const subscribed = await this.userCourseRepository.findOne({
+      where: { courseId, userId },
+    });
+
+    return {
+      id: course.id,
+      author: course.author,
+      authorId: course.authorId,
+      title: course.title,
+      description: course.description,
+      isAuthor: course.authorId === userId ? true : false,
+      isSubscribed: subscribed ? true : false,
+    };
+  }
+
+  async subscribe(courseId: number, userId: number) {
+    const user = await this.userRepository.findByPk(userId);
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    const course = await this.courseRepository.findByPk(courseId);
+
+    if (!course) {
+      throw new NotFoundException('Course not found');
+    }
+
+    const subscribed = await this.userCourseRepository.findOne({
+      where: { courseId, userId },
+    });
+
+    if (subscribed) {
+      throw new ForbiddenException('User is subscribed to the course');
+    }
+
+    try {
+      await this.userCourseRepository.create({ userId, courseId });
+    } catch {
+      throw new InternalServerErrorException('Not subscribed to the course');
+    }
+
+    return true;
+  }
+
+  async unsubscribe(courseId: number, userId: number) {
+    const user = await this.userRepository.findByPk(userId);
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    const course = await this.courseRepository.findByPk(courseId);
+
+    if (!course) {
+      throw new NotFoundException('Course not found');
+    }
+
+    const subscribed = await this.userCourseRepository.findOne({
+      where: { courseId, userId },
+    });
+
+    if (!subscribed) {
+      throw new NotFoundException('User is not subscribed to the course');
+    }
+
+    if (course.authorId === subscribed.userId) {
+      throw new ForbiddenException('No permissions');
+    }
+
+    try {
+      await this.userCourseRepository.destroy({ where: { userId, courseId } });
+    } catch {
+      throw new InternalServerErrorException(
+        'Not unsubscribed from the course',
+      );
+    }
+
+    return true;
   }
 }
