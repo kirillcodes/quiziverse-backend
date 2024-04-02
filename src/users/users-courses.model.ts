@@ -30,4 +30,7 @@ export class UsersCourses extends Model<UsersCourses, CreationAttrs> {
   @ForeignKey(() => Course)
   @Column({ type: DataType.INTEGER })
   courseId: number;
+
+  @Column({ type: DataType.TEXT, allowNull: true })
+  base64Image: string;
 }

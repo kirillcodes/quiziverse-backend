@@ -103,16 +103,34 @@ export class CoursesService {
     }
   }
 
-  async getCoursesByUserId(userId: number): Promise<Course[]> {
+  async getCoursesByUserId(userId: number) {
     const user = await this.userRepository.findByPk(userId, {
-      include: [{ model: Course, as: 'courses' }],
+      include: [
+        {
+          model: this.courseRepository,
+          as: 'courses',
+        },
+      ],
     });
 
     if (!user) {
       throw new NotFoundException('User not found');
     }
 
-    return user.courses;
+    const courses = await Promise.all(
+      user.courses.map(async (course) => {
+        const subscribed = await this.userCourseRepository.findOne({
+          where: { courseId: course.id, userId },
+        });
+
+        return {
+          ...course.toJSON(),
+          base64Image: subscribed ? subscribed.base64Image : null,
+        };
+      }),
+    );
+
+    return courses;
   }
 
   async getAllCourses(): Promise<Course[]> {
@@ -210,5 +228,35 @@ export class CoursesService {
         'Not unsubscribed from the course',
       );
     }
+  }
+
+  async setCoverToCourse(
+    base64Image: string,
+    courseId: number,
+    userId: number,
+  ) {
+    const user = await this.userRepository.findByPk(userId);
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    const course = await this.courseRepository.findByPk(courseId);
+
+    if (!course) {
+      throw new NotFoundException('Course not found');
+    }
+
+    const subscribed = await this.userCourseRepository.findOne({
+      where: { courseId, userId },
+    });
+
+    if (!subscribed) {
+      throw new NotFoundException('User is not subscribed to the course');
+    }
+
+    await subscribed.update({ base64Image });
+
+    return true;
   }
 }

@@ -7,10 +7,17 @@ import {
   Req,
   Get,
   ParseIntPipe,
+  UploadedFile,
+  UseInterceptors,
+  Put,
+  ParseFilePipe,
+  MaxFileSizeValidator,
+  FileTypeValidator,
 } from '@nestjs/common';
 import { CoursesService } from './courses.service';
 import { CreateCourseDto } from './dto/create-course.dto';
 import { Request } from 'express';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 @Controller('courses')
 export class CoursesController {
@@ -70,5 +77,25 @@ export class CoursesController {
   ) {
     const userId = req.user.id;
     return await this.coursesService.unsubscribe(id, userId);
+  }
+
+  @Put(':id/upload-cover')
+  @UseInterceptors(FileInterceptor('image'))
+  async setCoverToCourse(
+    @Param('id', ParseIntPipe) id: number,
+    @Req() req: Request,
+    @UploadedFile(
+      new ParseFilePipe({
+        validators: [
+          new MaxFileSizeValidator({ maxSize: 500 * 1024 }),
+          new FileTypeValidator({ fileType: '.(png|gif|jpg)' }),
+        ],
+      }),
+    )
+    file: Express.Multer.File,
+  ) {
+    const userId = req.user.id;
+    const base64Image = file.buffer.toString('base64');
+    return await this.coursesService.setCoverToCourse(base64Image, id, userId);
   }
 }
