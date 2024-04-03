@@ -11,6 +11,7 @@ import { UsersModule } from './users/users.module';
 import { AuthMiddleware } from './auth/auth.middleware';
 import { CoursesModule } from './courses/courses.module';
 import { TestsModule } from './tests/tests.module';
+import { ThrottlerModule } from '@nestjs/throttler';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { TestsModule } from './tests/tests.module';
       models: [__dirname + '/**/*.model{.ts}'],
       autoLoadModels: true,
     }),
+    ThrottlerModule.forRoot([{ ttl: 500, limit: 1 }]),
     AuthModule,
     UsersModule,
     CoursesModule,

@@ -26,6 +26,7 @@
     "@nestjs/jwt": "^10.2.0",
     "@nestjs/platform-express": "^10.0.0",
     "@nestjs/sequelize": "^10.0.0",
+    "@nestjs/throttler": "^5.1.2",
     "bcryptjs": "^2.4.3",
     "cookie-parser": "^1.4.6",
     "cross-env": "^7.0.3",

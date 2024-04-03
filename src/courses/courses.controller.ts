@@ -13,11 +13,14 @@ import {
   ParseFilePipe,
   MaxFileSizeValidator,
   FileTypeValidator,
+  Query,
+  UseGuards,
 } from '@nestjs/common';
 import { CoursesService } from './courses.service';
 import { CreateCourseDto } from './dto/create-course.dto';
 import { Request } from 'express';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { ThrottlerGuard } from '@nestjs/throttler';
 
 @Controller('courses')
 export class CoursesController {
@@ -50,9 +53,12 @@ export class CoursesController {
     return await this.coursesService.getCoursesByUserId(userId);
   }
 
-  @Get('all')
-  async getAllCourses() {
-    return await this.coursesService.getAllCourses();
+  @UseGuards(ThrottlerGuard)
+  @Get('search')
+  async searchCourses(@Query('query') query: string, @Req() req: Request) {
+    const userId = req.user.id;
+    const courses = await this.coursesService.search(query, userId);
+    return courses;
   }
 
   @Get(':id')

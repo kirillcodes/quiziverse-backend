@@ -3,6 +3,7 @@ import {
   Injectable,
   InternalServerErrorException,
   NotFoundException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { Course } from './courses.model';
 import { InjectModel } from '@nestjs/sequelize';
@@ -14,6 +15,7 @@ import { TestResult } from 'src/tests/tests-results.model';
 import { Question } from 'src/tests/questions.model';
 import { Answer } from 'src/tests/answers.model';
 import { UserAnswer } from 'src/tests/users-answers.model';
+import { Op } from 'sequelize';
 
 @Injectable()
 export class CoursesService {
@@ -133,8 +135,33 @@ export class CoursesService {
     return courses;
   }
 
-  async getAllCourses(): Promise<Course[]> {
-    const courses = await this.courseRepository.findAll();
+  async search(query: string, userId: number): Promise<Course[]> {
+    if (!query) return;
+
+    const user = await this.userRepository.findByPk(userId);
+
+    if (!user) {
+      throw new UnauthorizedException('Unauthorized');
+    }
+
+    const courses = await this.courseRepository.findAll({
+      where: {
+        [Op.or]: [
+          {
+            id: {
+              [Op.eq]: parseInt(query) || null,
+            },
+          },
+          {
+            title: {
+              [Op.like]: `%${query}%`,
+            },
+          },
+        ],
+      },
+      limit: 5,
+    });
+
     return courses;
   }
 
