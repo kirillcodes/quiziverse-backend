@@ -8,12 +8,15 @@ import { JwtService } from '@nestjs/jwt';
 import { hashSync, compareSync } from 'bcryptjs';
 import { ROLES } from 'src/users/enums/roles.enum';
 import { UsersService } from 'src/users/users.service';
+import { MailService } from './mail.service';
+import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class AuthService {
   constructor(
     private userService: UsersService,
     private jwtService: JwtService,
+    private mailService: MailService,
   ) {}
 
   async signUp(email: string, password: string) {
@@ -45,10 +48,20 @@ export class AuthService {
       throw new HttpException('Email is incorrect', HttpStatus.BAD_REQUEST);
     }
 
+    const activationLink = uuidv4();
+    await this.mailService.sendActivationMail(
+      email,
+      `${process.env.API_URL}/api/auth/activate/${activationLink}`,
+    );
+
+    const isActivated: boolean = false;
+
     const user = await this.userService.createUser(
       username,
       email,
       hashedPassword,
+      activationLink,
+      isActivated,
       role,
     );
 

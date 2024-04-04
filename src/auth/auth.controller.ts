@@ -1,11 +1,15 @@
 import { AuthService } from './auth.service';
-import { Body, Controller, Get, Post, Req } from '@nestjs/common';
-import { Request } from 'express';
+import { Body, Controller, Get, Param, Post, Req, Res } from '@nestjs/common';
+import { Request, Response } from 'express';
 import { CreateUserDto } from 'src/users/dto/create-user.dto';
+import { UsersService } from 'src/users/users.service';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private authService: AuthService) {}
+  constructor(
+    private authService: AuthService,
+    private usersService: UsersService,
+  ) {}
 
   @Post('sign-up')
   async signUp(@Body() dto: CreateUserDto) {
@@ -24,5 +28,11 @@ export class AuthController {
     const userId = req.user.id;
     const role = await this.authService.getRole(userId);
     return role;
+  }
+
+  @Get('activate/:link')
+  async activate(@Param('link') activationLink: string, @Res() res: Response) {
+    await this.usersService.activate(activationLink);
+    return res.redirect(`${process.env.CLIENT_URL}`);
   }
 }

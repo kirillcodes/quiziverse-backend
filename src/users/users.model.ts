@@ -12,6 +12,8 @@ type UserCreationAttrs = {
   username: string;
   email: string;
   password: string;
+  activationLink: string;
+  isActivated: boolean;
   role: string;
 };
 
@@ -43,6 +45,18 @@ export class User extends Model<User, UserCreationAttrs> {
     allowNull: false,
   })
   password: string;
+
+  @Column({
+    type: DataType.STRING,
+  })
+  activationLink: string;
+
+  @Column({
+    type: DataType.BOOLEAN,
+    allowNull: false,
+    defaultValue: false,
+  })
+  isActivated: boolean;
 
   @Column({
     type: DataType.STRING,
