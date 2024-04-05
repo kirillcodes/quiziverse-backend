@@ -21,7 +21,7 @@ yarn install
 yarn run start:dev
 ```
 
-<h2>Environment (.env)</h2>
+<h2>Environment (.development.env)</h2>
 
 You can use own environment settings
 
